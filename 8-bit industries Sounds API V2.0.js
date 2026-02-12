@@ -1,6 +1,6 @@
 /* 8-BIT INDUSTRIES SOUNDS V2.0 
    Engine: new-sound-8BI (Automatic Tags)
-   Feature: double_sound support enabled
+   Status: Double Sound & Click Fixed
 */
 
 const AudioEngine = {
@@ -28,9 +28,8 @@ const AudioEngine = {
         o.stop(start + dur);
     },
 
-    // Nova função para interpretar execução dupla
     exec(command) {
-        if (command.includes('&double_sound=')) {
+        if (typeof command === 'string' && command.includes('&double_sound=')) {
             const sounds = command.split('=')[1].split(' and ');
             sounds.forEach(s => {
                 const cleanName = s.replace(/"/g, '').trim();
@@ -45,11 +44,7 @@ const AudioEngine = {
         "click": () => {
             const now = AudioEngine.ctx.currentTime;
             AudioEngine.osc(700, now, 0.02, 'square', 0.1);
-        },
-        "coin": () => {
-            const now = AudioEngine.ctx.currentTime;
-            AudioEngine.osc(523, now, 0.1, 'square', 0.1);
-            AudioEngine.osc(783, now + 0.1, 0.2, 'square', 0.1);
+            AudioEngine.osc(300, now + 0.01, 0.01, 'sine', 0.05);
         },
         "credits": () => AudioEngine.playCredits()
     },
@@ -62,6 +57,14 @@ const AudioEngine = {
         const sequence = () => {
             if (!this.playing) return;
             for(let i=0; i<4; i++) this.osc(110, now + i*0.4, 0.4, 'sawtooth', 0.1);
+            this.osc(80, now + 1.6, 0.6, 'triangle', 0.3); 
+            this.osc(150, now + 1.6, 0.2, 'square', 0.2);
+            for(let i=0; i<16; i++) {
+                let t = now + 2.2 + (i * 0.2);
+                let f = [440, 523, 587, 659, 783][i % 5];
+                this.osc(f, t, 0.15, 'square', 0.1);
+                if(i % 4 === 0) this.osc(60, t, 0.3, 'sine', 0.2); 
+            }
             now += 5.5;
             if (this.playing) setTimeout(sequence, 5500);
         };
@@ -73,5 +76,4 @@ const AudioEngine = {
         if (this.ctx) this.ctx.suspend();
     }
 };
-
 window.AudioEngine = AudioEngine;
