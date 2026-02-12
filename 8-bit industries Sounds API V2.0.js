@@ -1,5 +1,6 @@
 /* 8-BIT INDUSTRIES SOUNDS V2.0 
    Engine: new-sound-8BI (Automatic Tags)
+   Mobile Optimized Version
 */
 
 const AudioEngine = {
@@ -10,6 +11,7 @@ const AudioEngine = {
         if (!this.ctx) {
             this.ctx = new (window.AudioContext || window.webkitAudioContext)();
         }
+        // ESSENCIAL PARA CELULARES:
         if (this.ctx.state === 'suspended') {
             this.ctx.resume();
         }
@@ -69,16 +71,28 @@ const AudioEngine = {
     }
 };
 
-// A TAG PERSONALIZADA
+// A TAG PERSONALIZADA (Com suporte a Touch/Celular)
 class Sound8BI extends HTMLElement {
     connectedCallback() {
         this.style.cursor = 'pointer';
         this.style.display = 'inline-block';
-        this.onclick = () => {
+        this.style.userSelect = 'none'; // Evita selecionar texto no celular ao tocar
+        
+        const trigger = () => {
             const s = this.getAttribute('sound');
-            AudioEngine.init(); // ACORDA O ÁUDIO
+            AudioEngine.init(); 
             if (AudioEngine.library[s]) AudioEngine.library[s]();
+        };
+
+        this.onclick = trigger;
+        this.ontouchstart = (e) => {
+            // e.preventDefault(); // Opcional: evita o scroll se for só um botão
+            trigger();
         };
     }
 }
 customElements.define('new-sound-8bi', Sound8BI);
+
+// FIX FINAL PARA CELULAR: Desbloqueia o áudio em qualquer toque na tela
+document.addEventListener('touchstart', () => AudioEngine.init(), { once: true });
+document.addEventListener('mousedown', () => AudioEngine.init(), { once: true });
