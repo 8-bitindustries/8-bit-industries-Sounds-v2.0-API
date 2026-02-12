@@ -1,6 +1,6 @@
 /* 8-BIT INDUSTRIES SOUNDS V2.0 
    Engine: new-sound-8BI (Automatic Tags)
-   Mobile Optimized Version
+   Sound: IDENTICAL TO KIWI WIKI
 */
 
 const AudioEngine = {
@@ -11,12 +11,12 @@ const AudioEngine = {
         if (!this.ctx) {
             this.ctx = new (window.AudioContext || window.webkitAudioContext)();
         }
-        // ESSENCIAL PARA CELULARES:
         if (this.ctx.state === 'suspended') {
             this.ctx.resume();
         }
     },
 
+    // A FUNÇÃO OSC IGUALZINHA A DO SITE
     osc(freq, start, dur, type, vol) {
         this.init();
         const o = this.ctx.createOscillator();
@@ -53,16 +53,37 @@ const AudioEngine = {
         this.init();
         if (this.playing) return;
         this.playing = true;
+
+        // LÓGICA COPIADA EXATAMENTE DO KIWI WIKI
         let now = this.ctx.currentTime;
-        const loop = () => {
+        
+        const sequence = () => {
             if (!this.playing) return;
-            for(let i=0; i<4; i++) this.osc(110, now + i*0.4, 0.4, 'sawtooth', 0.1);
-            this.osc(80, now + 1.6, 0.6, 'triangle', 0.4); 
+
+            // 1. INTRO
+            for(let i=0; i<4; i++) {
+                this.osc(110, now + i*0.4, 0.4, 'sawtooth', 0.1);
+            }
+
+            // 2. O "TAM" (O IMPACTO)
+            this.osc(80, now + 1.6, 0.6, 'triangle', 0.3); 
             this.osc(150, now + 1.6, 0.2, 'square', 0.2);
-            now += 5.5;
-            if (this.playing) setTimeout(loop, 5500);
+
+            // 3. PARTE ANIMADA (A MELODIA DO FINAL)
+            for(let i=0; i<16; i++) {
+                let t = now + 2.2 + (i * 0.2);
+                let f = [440, 523, 587, 659, 783][i % 5];
+                this.osc(f, t, 0.15, 'square', 0.1);
+                
+                // Kick drum
+                if(i % 4 === 0) this.osc(60, t, 0.3, 'sine', 0.2); 
+            }
+
+            now += 5.5; // O tempo exato do loop original
+            
+            if (this.playing) setTimeout(sequence, 5500);
         };
-        loop();
+        sequence();
     },
 
     stop() {
@@ -71,12 +92,12 @@ const AudioEngine = {
     }
 };
 
-// A TAG PERSONALIZADA (Com suporte a Touch/Celular)
+// --- TAG PERSONALIZADA (COM MOBILE FIX) ---
 class Sound8BI extends HTMLElement {
     connectedCallback() {
         this.style.cursor = 'pointer';
         this.style.display = 'inline-block';
-        this.style.userSelect = 'none'; // Evita selecionar texto no celular ao tocar
+        this.style.userSelect = 'none';
         
         const trigger = () => {
             const s = this.getAttribute('sound');
@@ -86,13 +107,13 @@ class Sound8BI extends HTMLElement {
 
         this.onclick = trigger;
         this.ontouchstart = (e) => {
-            // e.preventDefault(); // Opcional: evita o scroll se for só um botão
+            // e.preventDefault(); // Comentei para não travar a rolagem da tela
             trigger();
         };
     }
 }
 customElements.define('new-sound-8bi', Sound8BI);
 
-// FIX FINAL PARA CELULAR: Desbloqueia o áudio em qualquer toque na tela
+// DESBLOQUEADOR FINAL DE ÁUDIO
 document.addEventListener('touchstart', () => AudioEngine.init(), { once: true });
-document.addEventListener('mousedown', () => AudioEngine.init(), { once: true });
+document.addEventListener('click', () => AudioEngine.init(), { once: true });
